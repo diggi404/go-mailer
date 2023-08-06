@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Mailer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #636261;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header-container {
+            background-color: #961b1b;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .header-container h1 {
+            margin: 0;
+            display: inline-block;
+        }
+
+        .icon {
+            margin-right: 10px;
+        }
+
+        .form-container {
+            max-width: 50%;
+            width: 40%;
+            margin: 20px 20px 20px 20px;
+            background-color: #FAFBF9;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            float: left;
+        }
+
+        .form-container-right {
+            max-width: 50%;
+            width: 40%;
+            margin: 20px 20px 20px 0;
+            background-color: #bfbaba;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            float: right; 
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        #username,
+        #password,#port,#sender-name {
+            width: 80%;
+        }
+
+        .form-group.inline {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 90%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .form-group input[type="submit"] {
+            background-color: #961b1b;
+            color: white;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .form-group input[type="submit"]:hover {
+            background-color: #317ae2;
+        }
+
+        .center-header {
+            text-align: center;
+            padding-bottom: 20px;
+        }
+
+        .form-group.flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .form-group.flex div {
+            flex: 1;
+        }
+
+        .radio-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .radio-group input[type="radio"] {
+            margin: 0;
+            width: 16px;
+            height: 16px;
+        }
+
+        .radio-group label {
+            margin: 0;
+            line-height: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header-container">
+        <i class="icon fas fa-paper-plane"></i>
+        <h1>Go Mailer</h1>
+    </div>
+
+    <div class="form-container">
+        <form id="mail-form" action="/" method="post">
+            <div class="form-group flex">
+                <div class="inline"> 
+                    <label for="username">SMTP Username:</label>
+                    <input type="text" id="username" name="username">
+                </div>
+                <div class="inline"> 
+                    <label for="password">SMTP Password:</label>
+                    <input type="password" id="password" name="password">
+                </div>
+            </div>
+    
+            <div class="form-group flex">
+                <div class="inline">
+                    <label for="port">SMTP Port:</label>
+                    <input type="text" id="port" name="port">
+                </div>
+                <div class="inline">
+                    <label for="sender-name">Sender Name:</label>
+                    <input type="text" id="sender-name" name="sender-name">
+                </div>
+            </div>
+    
+            <div class="form-group">
+                <label for="subject">Subject:</label>
+                <input type="text" id="subject" name="subject">
+            </div>
+    
+            <div class="form-group">
+                <label for="message">Message:</label>
+                <textarea id="message" name="message" rows="5"></textarea>
+            </div>
+    
+            <div class="form-group">
+                <label>Message Type:</label>
+                <div class="radio-group">
+                    <input type="radio" id="type-normal" name="message-type" value="normal">
+                    <label for="type-normal">Plain</label>
+                    <input type="radio" id="type-html" name="message-type" value="html">
+                    <label for="type-html">Html</label>
+                </div>
+            </div>
+    
+            <div class="form-group">
+                <label for="email-list">Email List:</label>
+                <textarea id="email-list" name="email-list" rows="5"></textarea>
+            </div>
+    
+    
+            <div class="form-group">
+                <input type="submit" value="Submit">
+            </div>
+        </form>
+        
+    </div>
+
+    <div class="form-container-right">
+        
+    </div>
+</body>
+
+</html>
