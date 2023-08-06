@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"strings"
 	"sync"
-
-	"github.com/gorilla/websocket"
 )
 
 type Emails []string
@@ -41,25 +39,6 @@ func ReadStatus() {
 	fmt.Printf("results: %v\n", results)
 }
 
-func handleWebSocket(w http.ResponseWriter, req *http.Request) {
-	upgrader := websocket.Upgrader{}
-	conn, err := upgrader.Upgrade(w, req, nil)
-	if err != nil {
-		fmt.Println("Error upgrading to WebSocket:", err)
-		return
-	}
-	defer conn.Close()
-
-	for result := range resultsChan {
-		err := conn.WriteJSON(result)
-		if err != nil {
-			fmt.Println("Error writing WebSocket message:", err)
-			break
-		}
-		fmt.Println("Sent WebSocket message:", result)
-	}
-}
-
 func mailer(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		tmpl, _ := template.ParseFiles("public/index.html")
@@ -90,6 +69,5 @@ func mailer(w http.ResponseWriter, req *http.Request) {
 
 func main() {
 	http.HandleFunc("/", mailer)
-	http.HandleFunc("/ws", handleWebSocket)
 	http.ListenAndServe(":3000", nil)
 }

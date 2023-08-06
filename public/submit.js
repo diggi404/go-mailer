@@ -1,3 +1,15 @@
+// Establish WebSocket connection when the page loads
+const socket = new WebSocket("ws://localhost:3000/ws");
+
+socket.onopen = (event) => {
+  console.log("WebSocket connection established.");
+};
+
+socket.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  console.log("Received update:", message);
+};
+
 function submitForm() {
   const form = document.getElementById("mail-form");
   const formData = new FormData(form);
@@ -9,16 +21,6 @@ function submitForm() {
     .then((response) => {
       if (response.ok) {
         console.log(response);
-        const socket = new WebSocket("ws://localhost:3000/ws");
-
-        socket.onopen = (event) => {
-          console.log("WebSocket connection established.");
-        };
-
-        socket.onmessage = (event) => {
-          const message = JSON.parse(event.data);
-          console.log("Received update:", message);
-        };
       } else {
         console.error("Error submitting form.");
       }
