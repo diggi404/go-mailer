@@ -10,10 +10,12 @@ import (
 
 type Emails []string
 type Results map[string]bool
+type Body []string
 
 var numEmails int
 var resultsChan = make(chan Results)
 var wg sync.WaitGroup
+var body Body
 
 func SendMail(index int, wg *sync.WaitGroup, emails []string) {
 	defer wg.Done()
@@ -44,6 +46,15 @@ func mailer(w http.ResponseWriter, req *http.Request) {
 	}
 	req.ParseMultipartForm(10 << 20)
 	getEmails := req.PostFormValue("email-list")
+	getUsername := req.PostFormValue("username")
+	getPassword := req.PostFormValue("password")
+	getPort := req.PostFormValue("port")
+	getSender := req.PostFormValue("sender-name")
+	getSubject := req.PostFormValue("subject")
+	getMessage := req.PostFormValue("message")
+	getMsgType := req.PostFormValue("message-type")
+	body = append(body, getUsername, getPassword, getPassword, getPort, getSender, getSubject, getMessage, getMsgType)
+	fmt.Printf("body: %v\n", body[0])
 	addresses := strings.Split(getEmails, "\n")
 
 	var emails Emails

@@ -143,12 +143,12 @@
             padding: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             border-radius: 4px;
-            overflow: hidden; /* This prevents the scroll bar from overflowing */
+            overflow: hidden;
         }
     
         .scrollable-area {
-            max-height: 300px; /* Set the height to your desired value */
-            overflow-y: auto; /* Enable vertical scrolling */
+            max-height: 300px;
+            overflow-y: auto;
             width: 100%;
         }
         .status-counts {
@@ -181,48 +181,48 @@
             <div class="form-group flex">
                 <div class="inline"> 
                     <label for="username">SMTP Username:</label>
-                    <input type="text" id="username" name="username">
+                    <input type="text" id="username" name="username" required>
                 </div>
                 <div class="inline"> 
                     <label for="password">SMTP Password:</label>
-                    <input type="password" id="password" name="password">
+                    <input type="password" id="password" name="password" required>
                 </div>
             </div>
     
             <div class="form-group flex">
                 <div class="inline">
                     <label for="port">SMTP Port:</label>
-                    <input type="text" id="port" name="port">
+                    <input type="number" id="port" name="port" placeholder="587" required>
                 </div>
                 <div class="inline">
                     <label for="sender-name">Sender Name:</label>
-                    <input type="text" id="sender-name" name="sender-name">
+                    <input type="text" id="sender-name" name="sender-name" required>
                 </div>
             </div>
     
             <div class="form-group">
                 <label for="subject">Subject:</label>
-                <input type="text" id="subject" name="subject">
+                <input type="text" id="subject" name="subject" required>
             </div>
     
             <div class="form-group">
                 <label for="message">Message:</label>
-                <textarea id="message" name="message" rows="5"></textarea>
+                <textarea id="message" name="message" rows="5" required></textarea>
             </div>
     
             <div class="form-group">
                 <label>Message Type:</label>
                 <div class="radio-group">
-                    <input type="radio" id="type-normal" name="message-type" value="normal">
+                    <input type="radio" id="type-normal" name="message-type" value="normal" required>
                     <label for="type-normal">Plain</label>
-                    <input type="radio" id="type-html" name="message-type" value="html">
+                    <input type="radio" id="type-html" name="message-type" value="html" required>
                     <label for="type-html">Html</label>
                 </div>
             </div>
     
             <div class="form-group">
                 <label for="email-list">Email List:</label>
-                <textarea id="email-list" name="email-list" rows="5"></textarea>
+                <textarea id="email-list" name="email-list" rows="5" required></textarea>
             </div>
     
     
@@ -245,71 +245,97 @@
     </div>
 
 <script>
+
+    // validate port number
+    const portInput = document.getElementById("port");
+    portInput.addEventListener("input", function () {
+      const port = parseInt(this.value);
+      const isValidPort = port === 587 || port === 465 || port === 25;
+      this.setCustomValidity(
+        isValidPort ? "" : "Invalid SMTP port. Enter either 25 or 465 or 587"
+      );
+    });
+
+    // make sure none of the fields are empty
     function submitForm() {
-        const button = document.getElementById("submit");
-        button.disabled = true;
-        const sentCountElement = document.getElementById("sent-count");
-        const failedCountElement = document.getElementById("failed-count");
-        const statusCounts = document.querySelector(".status-counts");
-        const statusDisplayContainer = document.querySelector(".status-container");
-        const statusDisplay = document.getElementById("status-display");
-        sentCountElement.textContent = 0
-        failedCountElement.textContent = 0
-        statusDisplay.innerHTML = ""
-        const eventSource = new EventSource("/status");
-        console.log("new connection", eventSource)
-        eventSource.onmessage = (event) => {
-          statusCounts.style.display = "block";
-          statusDisplayContainer.style.display = "block";
-          const result = JSON.parse(event.data);
-          const { email, status } = result;
-          const emailStatus = status ? "Sent" : "Failed"
-          const statusColor = status ? "green" : "red";
-            statusDisplay.innerHTML += `${email} -> <span style="color:${statusColor}">${emailStatus}</span><br>`;
-          if (status) {
-            sentCountElement.textContent = parseInt(sentCountElement.textContent) + 1;
-          } else {
-            failedCountElement.textContent =
-              parseInt(failedCountElement.textContent) + 1;
-          }
-        };
-      
-        eventSource.onerror = () => {
-          console.error("Error in SSE connection.");
-          eventSource.close();
-        };
-      
-        eventSource.onclose = () => {
-          console.log("SSE connection closed.");
-          button.disabled = false;
-        };
-      
-        const form = document.getElementById("mail-form");
-        const formData = new FormData(form);
-      
-        fetch("/", {
-          method: "POST",
-          body: formData,
-        })
-          .then((response) => {
-            if (response.ok) {
-              button.disabled = false;
-              response.text().then((data) => {
-                console.log(data);
-              });
-            }else console.log(response)
-          })
-          .catch((error) => {
-            console.error("An error occurred:", error);
-          });
+      const form = document.getElementById("mail-form");
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
       }
+    
+      // get all needed elements
       const button = document.getElementById("submit");
-      button.addEventListener("click", function (event) {
-        event.preventDefault();
-        console.log("Button clicked!");
-        submitForm();
-      });      
-  </script>
+      button.disabled = true;
+      const sentCountElement = document.getElementById("sent-count");
+      const failedCountElement = document.getElementById("failed-count");
+      const statusCounts = document.querySelector(".status-counts");
+      const statusDisplayContainer = document.querySelector(".status-container");
+      const statusDisplay = document.getElementById("status-display");
+      sentCountElement.textContent = 0;
+      failedCountElement.textContent = 0;
+      statusDisplay.innerHTML = "";
+    
+      //establish SSE connection to the Go server
+      const eventSource = new EventSource("/status");
+    
+      // process message update from server
+      eventSource.onmessage = (event) => {
+        statusCounts.style.display = "block";
+        statusDisplayContainer.style.display = "block";
+        const result = JSON.parse(event.data);
+        const { email, status } = result;
+        const emailStatus = status ? "Sent" : "Failed";
+        const statusColor = status ? "green" : "red";
+        statusDisplay.innerHTML += `${email} -> <span style="color:${statusColor}">${emailStatus}</span><br>`;
+    
+        // increment sent and failed on realtime update from server
+        if (status) {
+          sentCountElement.textContent = parseInt(sentCountElement.textContent) + 1;
+        } else {
+          failedCountElement.textContent =
+            parseInt(failedCountElement.textContent) + 1;
+        }
+      };
+    
+      // handle SSE error connection
+      eventSource.onerror = () => {
+        console.error("Error in SSE connection.");
+        eventSource.close();
+      };
+    
+      // handle closed SSE connection
+      eventSource.onclose = () => {
+        console.log("SSE connection closed.");
+        button.disabled = false;
+      };
+    
+      // properly format form input values
+      const formData = new FormData(form);
+    
+      fetch("/", {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => {
+          if (response.ok) {
+            button.disabled = false;
+            response.text().then((data) => {
+              console.log(data);
+            });
+          } else console.log(response);
+        })
+        .catch((error) => {
+          console.error("An error occurred:", error);
+        });
+    }
+    const button = document.getElementById("submit");
+    button.addEventListener("click", function (event) {
+      event.preventDefault();
+      submitForm();
+    });
+    
+</script>
 </body>
 
 </html>
