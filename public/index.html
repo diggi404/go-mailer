@@ -86,7 +86,7 @@
             background-color: #961b1b;
             color: white;
             cursor: pointer;
-            margin-top: 20px;
+            margin: 20px 0;
             width: 70%;
             padding: 10px;
             border: 1px solid;
@@ -131,6 +131,42 @@
             margin: 0;
             line-height: 16px;
         }
+        .status-counts,
+        .status-container {
+            display: none;
+        }
+        .status-container {
+            max-width: 100%;
+            width: 90%;
+            margin: 20px 0;
+            background-color: #eaeaea;
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            overflow: hidden; /* This prevents the scroll bar from overflowing */
+        }
+    
+        .scrollable-area {
+            max-height: 300px; /* Set the height to your desired value */
+            overflow-y: auto; /* Enable vertical scrolling */
+            width: 100%;
+        }
+        .status-counts {
+            text-align: center;
+            padding: 10px;
+            font-weight: bold;
+        }
+        .status-counts span {
+            font-weight: bold;
+        }
+    
+        .status-counts .sent {
+            color: green;
+        }
+    
+        .status-counts .failed {
+            color: red;
+        }
     </style>
 </head>
 
@@ -168,7 +204,6 @@
                 <label for="subject">Subject:</label>
                 <input type="text" id="subject" name="subject">
             </div>
-            <div id="status-display"></div>
     
             <div class="form-group">
                 <label for="message">Message:</label>
@@ -195,6 +230,13 @@
                 <button type="submit" id="submit">Send</button>
             </div>
         </form>
+        <div class="status-counts">
+            Sent: <span id="sent-count" class="sent">0</span><br>
+            Failed: <span id="failed-count" class="failed">0</span>
+        </div>
+        <div class="status-container">
+            <div id="status-display" class="scrollable-area"></div>
+        </div>
         
     </div>
 
@@ -203,53 +245,71 @@
     </div>
 
 <script>
-    function submitForm() {  
+    function submitForm() {
+        const button = document.getElementById("submit");
+        button.disabled = true;
+        const sentCountElement = document.getElementById("sent-count");
+        const failedCountElement = document.getElementById("failed-count");
+        const statusCounts = document.querySelector(".status-counts");
+        const statusDisplayContainer = document.querySelector(".status-container");
+        const statusDisplay = document.getElementById("status-display");
+        sentCountElement.textContent = 0
+        failedCountElement.textContent = 0
+        statusDisplay.innerHTML = ""
         const eventSource = new EventSource("/status");
-  
+        console.log("new connection", eventSource)
         eventSource.onmessage = (event) => {
+          statusCounts.style.display = "block";
+          statusDisplayContainer.style.display = "block";
           const result = JSON.parse(event.data);
           const { email, status } = result;
-          statusDisplay.innerHTML += `Email: ${email}, Status: ${status}<br>`;
-          console.log(result)
+          const emailStatus = status ? "Sent" : "Failed"
+          const statusColor = status ? "green" : "red";
+            statusDisplay.innerHTML += `${email} -> <span style="color:${statusColor}">${emailStatus}</span><br>`;
+          if (status) {
+            sentCountElement.textContent = parseInt(sentCountElement.textContent) + 1;
+          } else {
+            failedCountElement.textContent =
+              parseInt(failedCountElement.textContent) + 1;
+          }
         };
-
+      
         eventSource.onerror = () => {
           console.error("Error in SSE connection.");
           eventSource.close();
         };
-
+      
         eventSource.onclose = () => {
           console.log("SSE connection closed.");
+          button.disabled = false;
         };
-      const statusDisplay = document.getElementById("status-display");
-      statusDisplay.innerHTML = "";
-  
-      const form = document.getElementById("mail-form");
-      const formData = new FormData(form);
-  
-      fetch("/", {
-        method: "POST",
-        body: formData,
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Error submitting form.");
-          }
+      
+        const form = document.getElementById("mail-form");
+        const formData = new FormData(form);
+      
+        fetch("/", {
+          method: "POST",
+          body: formData,
         })
-        .catch((error) => {
-          console.error("An error occurred:", error);
-        });
-    }
-  
-    const button = document.getElementById("submit");
-    button.addEventListener("click", function (event) {
-      event.preventDefault();
-      console.log("Button clicked!");
-      submitForm();
-    });
+          .then((response) => {
+            if (response.ok) {
+              button.disabled = false;
+              response.text().then((data) => {
+                console.log(data);
+              });
+            }else console.log(response)
+          })
+          .catch((error) => {
+            console.error("An error occurred:", error);
+          });
+      }
+      const button = document.getElementById("submit");
+      button.addEventListener("click", function (event) {
+        event.preventDefault();
+        console.log("Button clicked!");
+        submitForm();
+      });      
   </script>
-  
-  
 </body>
 
 </html>

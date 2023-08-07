@@ -13,7 +13,6 @@ type Results map[string]bool
 
 var numEmails int
 var resultsChan = make(chan Results)
-var results = make(Results)
 var wg sync.WaitGroup
 
 func SendMail(index int, wg *sync.WaitGroup, emails []string) {
@@ -31,12 +30,10 @@ func ReadStatus(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Connection", "keep-alive")
 	for result := range resultsChan {
 		for email, status := range result {
-			results[email] = status
 			fmt.Fprintf(w, "data: {\"email\": \"%s\", \"status\": %v}\n\n", email, status)
 			w.(http.Flusher).Flush()
 		}
 	}
-	// fmt.Printf("results: %v\n", results)
 }
 
 func mailer(w http.ResponseWriter, req *http.Request) {
@@ -61,7 +58,7 @@ func mailer(w http.ResponseWriter, req *http.Request) {
 
 	wg.Wait()
 	fmt.Println("i am done!")
-	fmt.Printf("all results: %v\n", results)
+	w.Write([]byte("all is done!"))
 }
 
 func main() {
