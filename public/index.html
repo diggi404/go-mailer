@@ -82,14 +82,20 @@
             border-radius: 4px;
         }
 
-        .form-group input[type="submit"] {
+        #submit {
             background-color: #961b1b;
             color: white;
             cursor: pointer;
             margin-top: 20px;
+            width: 70%;
+            padding: 10px;
+            border: 1px solid;
+            border-radius: 4px;
+            margin: 0 auto;
+            display: block;
         }
 
-        .form-group input[type="submit"]:hover {
+        #submit:hover {
             background-color: #317ae2;
         }
 
@@ -162,6 +168,7 @@
                 <label for="subject">Subject:</label>
                 <input type="text" id="subject" name="subject">
             </div>
+            <div id="status-display"></div>
     
             <div class="form-group">
                 <label for="message">Message:</label>
@@ -185,7 +192,7 @@
     
     
             <div class="form-group">
-                <input type="submit" value="Submit">
+                <button type="submit" id="submit">Send</button>
             </div>
         </form>
         
@@ -194,6 +201,60 @@
     <div class="form-container-right">
         
     </div>
+    <!-- Your HTML code here -->
+
+<!-- Your HTML code here -->
+
+<script>
+    function submitForm() {  
+        // Establish the SSE connection using the provided URL directly
+        const eventSource = new EventSource("/status");
+  
+        // Add event listeners to handle incoming SSE messages
+        eventSource.onmessage = (event) => {
+          const result = JSON.parse(event.data);
+          const { email, status } = result;
+          statusDisplay.innerHTML += `Email: ${email}, Status: ${status}<br>`;
+          console.log(result)
+        };
+
+        eventSource.onerror = () => {
+          console.error("Error in SSE connection.");
+          eventSource.close();
+        };
+
+        eventSource.onclose = () => {
+          console.log("SSE connection closed.");
+        };
+      const statusDisplay = document.getElementById("status-display");
+      statusDisplay.innerHTML = ""; // Clear previous status display
+  
+      const form = document.getElementById("mail-form");
+      const formData = new FormData(form);
+  
+      fetch("/", {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Error submitting form.");
+          }
+        })
+        .catch((error) => {
+          console.error("An error occurred:", error);
+        });
+    }
+  
+    const button = document.getElementById("submit");
+    button.addEventListener("click", function (event) {
+      event.preventDefault();
+      console.log("Button clicked!");
+      submitForm();
+    });
+  </script>
+  
+  
 </body>
 
 </html>

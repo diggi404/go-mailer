@@ -22,21 +22,21 @@ func SendMail(index int, wg *sync.WaitGroup, emails []string) {
 	fmt.Printf("email: %v\n", email)
 	status := true
 	result := Results{email: status}
-	select {
-	case resultsChan <- result:
-	default:
-		fmt.Println("Warning: WebSocket not available to send update.")
-	}
+	resultsChan <- result
 }
 
-func ReadStatus() {
-	wg.Done()
+func ReadStatus(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
 	for result := range resultsChan {
 		for email, status := range result {
 			results[email] = status
+			fmt.Fprintf(w, "data: {\"email\": \"%s\", \"status\": %v}\n\n", email, status)
+			w.(http.Flusher).Flush()
 		}
 	}
-	fmt.Printf("results: %v\n", results)
+	// fmt.Printf("results: %v\n", results)
 }
 
 func mailer(w http.ResponseWriter, req *http.Request) {
@@ -45,7 +45,7 @@ func mailer(w http.ResponseWriter, req *http.Request) {
 		tmpl.Execute(w, nil)
 		return
 	}
-	req.ParseForm()
+	req.ParseMultipartForm(10 << 20)
 	getEmails := req.PostFormValue("email-list")
 	addresses := strings.Split(getEmails, "\n")
 
@@ -54,10 +54,7 @@ func mailer(w http.ResponseWriter, req *http.Request) {
 		emails = append(emails, strings.TrimSpace(address))
 	}
 	numEmails = len(emails)
-	w.WriteHeader(http.StatusOK)
-	wg.Add(numEmails + 1)
-	go ReadStatus()
-
+	wg.Add(numEmails)
 	for i := 0; i < numEmails; i++ {
 		go SendMail(i, &wg, emails)
 	}
@@ -69,5 +66,6 @@ func mailer(w http.ResponseWriter, req *http.Request) {
 
 func main() {
 	http.HandleFunc("/", mailer)
+	http.HandleFunc("/status", ReadStatus)
 	http.ListenAndServe(":3000", nil)
 }
