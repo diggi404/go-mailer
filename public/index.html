@@ -201,16 +201,11 @@
     <div class="form-container-right">
         
     </div>
-    <!-- Your HTML code here -->
-
-<!-- Your HTML code here -->
 
 <script>
     function submitForm() {  
-        // Establish the SSE connection using the provided URL directly
         const eventSource = new EventSource("/status");
   
-        // Add event listeners to handle incoming SSE messages
         eventSource.onmessage = (event) => {
           const result = JSON.parse(event.data);
           const { email, status } = result;
@@ -227,7 +222,7 @@
           console.log("SSE connection closed.");
         };
       const statusDisplay = document.getElementById("status-display");
-      statusDisplay.innerHTML = ""; // Clear previous status display
+      statusDisplay.innerHTML = "";
   
       const form = document.getElementById("mail-form");
       const formData = new FormData(form);
