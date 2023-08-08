@@ -10,13 +10,28 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #636261;
+            background-color: white;
             margin: 0;
             padding: 0;
         }
+        #error-message {
+            display: none;
+            width: 20%;
+            position:absolute;
+            left: 35%;
+            background-color: #f44336;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease-in-out;
+            transform: translateY(-100%);
+        }
 
         .header-container {
-            background-color: #961b1b;
+            background-color: #102b57;
             color: white;
             text-align: center;
             padding: 20px;
@@ -35,7 +50,7 @@
             max-width: 50%;
             width: 40%;
             margin: 20px 20px 20px 20px;
-            background-color: #FAFBF9;
+            background-color: #f5f6fa;
             padding: 20px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             border-radius: 4px;
@@ -46,7 +61,7 @@
             max-width: 50%;
             width: 40%;
             margin: 20px 20px 20px 0;
-            background-color: #bfbaba;
+            background-color: #f5f6fa;
             padding: 20px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             border-radius: 4px;
@@ -64,7 +79,7 @@
         }
 
         #username,
-        #password,#port,#sender-name {
+        #password,#port,#host {
             width: 80%;
         }
 
@@ -83,7 +98,7 @@
         }
 
         #submit {
-            background-color: #961b1b;
+            background-color: #102b57;
             color: white;
             cursor: pointer;
             margin: 20px 0;
@@ -96,7 +111,7 @@
         }
 
         #submit:hover {
-            background-color: #317ae2;
+            background-color: #194682;
         }
 
         .center-header {
@@ -173,9 +188,9 @@
 <body>
     <div class="header-container">
         <i class="icon fas fa-paper-plane"></i>
-        <h1>Go Mailer</h1>
+        <h1>Hidden404 Mailer</h1>
     </div>
-
+    <div id="error-message" class="error-message"></div>
     <div class="form-container">
         <form id="mail-form" action="/" method="post">
             <div class="form-group flex">
@@ -192,12 +207,16 @@
             <div class="form-group flex">
                 <div class="inline">
                     <label for="port">SMTP Port:</label>
-                    <input type="number" id="port" name="port" placeholder="587" required>
+                    <input type="number" id="port" name="port" placeholder="25 | 465 | 587" required>
                 </div>
                 <div class="inline">
-                    <label for="sender-name">Sender Name:</label>
-                    <input type="text" id="sender-name" name="sender-name" required>
+                    <label for="sender-name">SMTP Host:</label>
+                    <input type="text" id="host" name="host" required>
                 </div>
+            </div>
+            <div class="form-group">
+                <label for="subject">Sender Name:</label>
+                <input type="text" id="sender-name" name="sender-name" required>
             </div>
     
             <div class="form-group">
@@ -245,96 +264,114 @@
     </div>
 
 <script>
-
     // validate port number
-    const portInput = document.getElementById("port");
-    portInput.addEventListener("input", function () {
-      const port = parseInt(this.value);
-      const isValidPort = port === 587 || port === 465 || port === 25;
-      this.setCustomValidity(
-        isValidPort ? "" : "Invalid SMTP port. Enter either 25 or 465 or 587"
-      );
-    });
+const portInput = document.getElementById("port");
+portInput.addEventListener("input", function () {
+  const port = parseInt(this.value);
+  const isValidPort = port === 587 || port === 465 || port === 25;
+  this.setCustomValidity(
+    isValidPort ? "" : "Invalid SMTP port. Enter either 25 or 465 or 587"
+  );
+});
 
-    // make sure none of the fields are empty
-    function submitForm() {
-      const form = document.getElementById("mail-form");
-      if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-      }
-    
-      // get all needed elements
-      const button = document.getElementById("submit");
-      button.disabled = true;
-      const sentCountElement = document.getElementById("sent-count");
-      const failedCountElement = document.getElementById("failed-count");
-      const statusCounts = document.querySelector(".status-counts");
-      const statusDisplayContainer = document.querySelector(".status-container");
-      const statusDisplay = document.getElementById("status-display");
-      sentCountElement.textContent = 0;
-      failedCountElement.textContent = 0;
-      statusDisplay.innerHTML = "";
-    
-      //establish SSE connection to the Go server
-      const eventSource = new EventSource("/status");
-    
-      // process message update from server
-      eventSource.onmessage = (event) => {
-        statusCounts.style.display = "block";
-        statusDisplayContainer.style.display = "block";
-        const result = JSON.parse(event.data);
-        const { email, status } = result;
-        const emailStatus = status ? "Sent" : "Failed";
-        const statusColor = status ? "green" : "red";
-        statusDisplay.innerHTML += `${email} -> <span style="color:${statusColor}">${emailStatus}</span><br>`;
-    
-        // increment sent and failed on realtime update from server
-        if (status) {
-          sentCountElement.textContent = parseInt(sentCountElement.textContent) + 1;
-        } else {
-          failedCountElement.textContent =
-            parseInt(failedCountElement.textContent) + 1;
-        }
-      };
-    
-      // handle SSE error connection
-      eventSource.onerror = () => {
-        console.error("Error in SSE connection.");
-        eventSource.close();
-      };
-    
-      // handle closed SSE connection
-      eventSource.onclose = () => {
-        console.log("SSE connection closed.");
-        button.disabled = false;
-      };
-    
-      // properly format form input values
-      const formData = new FormData(form);
-    
-      fetch("/", {
-        method: "POST",
-        body: formData,
-      })
-        .then((response) => {
-          if (response.ok) {
-            button.disabled = false;
-            response.text().then((data) => {
-              console.log(data);
-            });
-          } else console.log(response);
-        })
-        .catch((error) => {
-          console.error("An error occurred:", error);
-        });
+// show error messages from the server
+function showError(message) {
+    const errorMessage = document.getElementById("error-message");
+    errorMessage.textContent = message;
+    errorMessage.style.display = "block";
+    errorMessage.style.transform = "translateY(0)";
+    setTimeout(hideError, 3000);
+}
+  //parsed to the setTimeout function to hide the Error
+function hideError() {
+    const errorMessage = document.getElementById("error-message");
+    errorMessage.style.transform = "translateY(-300%)";
+}
+
+// make sure none of the fields are empty
+function submitForm() {
+  const form = document.getElementById("mail-form");
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
+  // get all needed elements
+  const button = document.getElementById("submit");
+  button.disabled = true;
+  const sentCountElement = document.getElementById("sent-count");
+  const failedCountElement = document.getElementById("failed-count");
+  const statusCounts = document.querySelector(".status-counts");
+  const statusDisplayContainer = document.querySelector(".status-container");
+  const statusDisplay = document.getElementById("status-display");
+  sentCountElement.textContent = 0;
+  failedCountElement.textContent = 0;
+  statusDisplay.innerHTML = "";
+
+  //establish SSE connection to the Go server
+  const eventSource = new EventSource("/status");
+
+  // process message update from server
+  eventSource.onmessage = (event) => {
+    statusCounts.style.display = "block";
+    statusDisplayContainer.style.display = "block";
+    const result = JSON.parse(event.data);
+    const { email, status } = result;
+    const emailStatus = status ? "Sent" : "Failed";
+    const statusColor = status ? "green" : "red";
+    statusDisplay.innerHTML += `${email} -> <span style="color:${statusColor}">${emailStatus}</span><br>`;
+
+    // increment sent and failed on realtime update from server
+    if (status) {
+      sentCountElement.textContent = parseInt(sentCountElement.textContent) + 1;
+    } else {
+      failedCountElement.textContent =
+        parseInt(failedCountElement.textContent) + 1;
     }
-    const button = document.getElementById("submit");
-    button.addEventListener("click", function (event) {
-      event.preventDefault();
-      submitForm();
+  };
+
+  // handle SSE error connection
+  eventSource.onerror = () => {
+    console.error("Error in SSE connection.");
+    eventSource.close();
+  };
+
+  // handle closed SSE connection
+  eventSource.onclose = () => {
+    console.log("SSE connection closed.");
+    button.disabled = false;
+  };
+
+  // properly format form input values
+  const formData = new FormData(form);
+
+  fetch("/", {
+    method: "POST",
+    body: formData,
+  })
+    .then((response) => {
+      if (response.ok) {
+        button.disabled = false;
+        response.text().then((data) => {
+          console.log(data);
+        });
+      } else if (response.status === 400) {
+        response.text().then((data) => {
+          showError(data);
+          button.disabled = false;
+        });
+      }
+    })
+    .catch((error) => {
+      console.error("An error occurred:", error);
     });
-    
+}
+const button = document.getElementById("submit");
+button.addEventListener("click", function (event) {
+  event.preventDefault();
+  submitForm();
+});
+
 </script>
 </body>
 
