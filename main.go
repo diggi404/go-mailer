@@ -46,15 +46,14 @@ func SendMail(index int, wg *sync.WaitGroup, emails Emails, smtp *gomail.Dialer,
 		goMailer.SetBody("text/html", string(fileContent))
 	}
 	err := smtp.DialAndSend(goMailer)
-	var status bool
 	if err != nil {
 		fmt.Printf("err: %v\n", err)
-		status = false
+		status := false
 		result := Results{email: status}
 		resultsChan <- result
 		fmt.Printf("result: %v\n", result)
 	} else {
-		status = true
+		status := true
 		result := Results{email: status}
 		resultsChan <- result
 		fmt.Printf("result: %v\n", result)
