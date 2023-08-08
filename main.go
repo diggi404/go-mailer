@@ -16,8 +16,10 @@ type Results map[string]bool
 type Body []string
 
 // declare global variables
+var numEmails int
 var resultsChan = make(chan Results)
 var wg sync.WaitGroup
+var body Body
 
 // check smtp connection before starting goroutines.
 func ConnectSmtp(smtpCreds []string) (*gomail.Dialer, error) {
@@ -46,13 +48,14 @@ func SendMail(index int, wg *sync.WaitGroup, emails []string, smtp *gomail.Diale
 		goMailer.SetBody("text/html", string(fileContent))
 	}
 	err := smtp.DialAndSend(goMailer)
+	var status bool
 	if err != nil {
 		fmt.Printf("err: %v\n", err)
-		status := false
+		status = false
 		result := Results{email: status}
 		resultsChan <- result
 	} else {
-		status := true
+		status = true
 		result := Results{email: status}
 		resultsChan <- result
 	}
@@ -109,7 +112,7 @@ func mailer(w http.ResponseWriter, req *http.Request) {
 			}
 		}
 		// append all parsed form data to body slice
-		body := &Body{getSender, getSubject, getMessage, getUsername}
+		body = append(body, getSender, getSubject, getMessage, getUsername)
 		// store parsed smtp credentials for authentication
 		smtpCreds := []string{getUsername, getPassword, getPort, getHost}
 		smtp, err := ConnectSmtp(smtpCreds)
@@ -125,12 +128,12 @@ func mailer(w http.ResponseWriter, req *http.Request) {
 		for _, address := range addresses {
 			emails = append(emails, strings.TrimSpace(address))
 		}
-		numEmails := len(emails)
+		numEmails = len(emails)
 
 		//set number of emails to the waitGroup and execute the goroutines
 		wg.Add(numEmails)
 		for i := 0; i < numEmails; i++ {
-			go SendMail(i, &wg, emails, smtp, *body, fileContent)
+			go SendMail(i, &wg, emails, smtp, body, fileContent)
 		}
 
 		wg.Wait()
