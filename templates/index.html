@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Mailer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="{{.CSSURL}}">
+</head>
+
+<body>
+    <div class="header-container">
+        <i class="icon fas fa-paper-plane"></i>
+        <h1>Hidden404 Mailer</h1>
+    </div>
+    <div id="error-message" class="error-message"></div>
+    <div class="form-container">
+        <form id="mail-form" action="/" method="post">
+            <div class="form-group flex">
+                <div class="inline"> 
+                    <label for="username">SMTP Username:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="inline"> 
+                    <label for="password">SMTP Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+            </div>
+    
+            <div class="form-group flex">
+                <div class="inline">
+                    <label for="port">SMTP Port:</label>
+                    <input type="number" id="port" name="port" placeholder="25 | 465 | 587" required>
+                </div>
+                <div class="inline">
+                    <label for="sender-name">SMTP Host:</label>
+                    <input type="text" id="host" name="host" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="subject">Sender Name:</label>
+                <input type="text" id="sender-name" name="sender-name" required>
+            </div>
+    
+            <div class="form-group">
+                <label for="subject">Subject:</label>
+                <input type="text" id="subject" name="subject" required>
+            </div>
+    
+            <div class="form-group">
+                <label for="message">Message:</label>
+                <textarea id="message" name="message" rows="5" required></textarea>
+            </div>
+    
+            <div class="form-group">
+                <label>Message Type:</label>
+                <div class="radio-group">
+                    <input type="radio" id="type-normal" name="message-type" value="normal" required>
+                    <label for="type-normal">Plain</label>
+                    <input type="radio" id="type-html" name="message-type" value="html" required>
+                    <label for="type-html">Html</label>
+                </div>
+            </div>
+            <div class="form-group" id="html-file-group" style="display: none;">
+                <label for="html-file">Upload Letter:</label>
+                <input type="file" id="html-file" name="html-file" accept=".html, .htm">
+            </div>
+    
+            <div class="form-group">
+                <label for="email-list">Email List:</label>
+                <textarea id="email-list" name="email-list" rows="5" required></textarea>
+            </div>
+    
+    
+            <div class="form-group">
+                <button type="submit" id="submit" class="loading-button">
+                    <span class="button-text">Send</span>
+                    <div class="loader"></div>
+                  </button>
+            </div>
+        </form>
+        <div class="status-counts">
+            Sent: <span id="sent-count" class="sent">0</span><br>
+            Failed: <span id="failed-count" class="failed">0</span>
+        </div>
+        <div class="status-container">
+            <div id="status-display" class="scrollable-area"></div>
+        </div>
+        
+    </div>
+
+    <div class="form-container-right">
+        
+    </div>
+  <script src="{{.JSURL}}"></script>
+</body>
+
+</html>

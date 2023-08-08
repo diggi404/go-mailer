@@ -77,8 +77,15 @@ func ReadStatus(w http.ResponseWriter, req *http.Request) {
 // root server handler
 func mailer(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodGet {
-		tmpl, _ := template.ParseFiles("public/index.html")
-		tmpl.Execute(w, nil)
+		tmpl, _ := template.ParseFiles("templates/index.html")
+		data := struct {
+			CSSURL string
+			JSURL  string
+		}{
+			CSSURL: "/static/styles.css",
+			JSURL:  "/static/script.js",
+		}
+		tmpl.Execute(w, data)
 		return
 	} else if req.Method == http.MethodPost {
 		// parse html form data
@@ -137,5 +144,7 @@ func mailer(w http.ResponseWriter, req *http.Request) {
 func main() {
 	http.HandleFunc("/", mailer)
 	http.HandleFunc("/status", ReadStatus)
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
 	http.ListenAndServe(":8080", nil)
 }

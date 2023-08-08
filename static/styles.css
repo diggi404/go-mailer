@@ -1,0 +1,204 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: white;
+    margin: 0;
+    padding: 0;
+}
+#error-message {
+    display: none;
+    width: 20%;
+    position:absolute;
+    left: 35%;
+    background-color: #f44336;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-in-out;
+    transform: translateY(-100%);
+}
+
+.header-container {
+    background-color: #102b57;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.header-container h1 {
+    margin: 0;
+    display: inline-block;
+}
+
+.icon {
+    margin-right: 10px;
+}
+
+.form-container {
+    max-width: 50%;
+    width: 40%;
+    margin: 20px 20px 20px 20px;
+    background-color: #f5f6fa;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    float: left;
+}
+
+.form-container-right {
+    max-width: 50%;
+    width: 40%;
+    margin: 20px 20px 20px 0;
+    background-color: #f5f6fa;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    float: right; 
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+#username,
+#password,#port,#host {
+    width: 80%;
+}
+
+.form-group.inline {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 90%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#submit {
+    background-color: #102b57;
+    color: white;
+    cursor: pointer;
+    margin: 20px 0;
+    width: 30%;
+    padding: 10px;
+    border: 1px solid;
+    border-radius: 5px;
+    margin: 0 auto;
+    display: block;
+}
+
+#submit:hover {
+    background-color: #194682;
+}
+.loading-button {
+    position: relative;
+}
+  
+.button-text {
+    display: inline-block;
+}
+  
+.loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid transparent;
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: none;
+}
+  
+@keyframes spin {
+    0% {
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+      transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+.center-header {
+    text-align: center;
+    padding-bottom: 20px;
+}
+
+.form-group.flex {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.form-group.flex div {
+    flex: 1;
+}
+
+.radio-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.radio-group input[type="radio"] {
+    margin: 0;
+    width: 16px;
+    height: 16px;
+}
+
+.radio-group label {
+    margin: 0;
+    line-height: 16px;
+}
+.status-counts,
+.status-container {
+    display: none;
+}
+.status-container {
+    max-width: 100%;
+    width: 90%;
+    margin: 20px 0;
+    background-color: #eaeaea;
+    padding: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.scrollable-area {
+    max-height: 300px;
+    overflow-y: auto;
+    width: 100%;
+}
+.status-counts {
+    text-align: center;
+    padding: 10px;
+    font-weight: bold;
+}
+.status-counts span {
+    font-weight: bold;
+}
+
+.status-counts .sent {
+    color: green;
+}
+
+.status-counts .failed {
+    color: red;
+}
