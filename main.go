@@ -76,66 +76,64 @@ func ReadStatus(w http.ResponseWriter, req *http.Request) {
 
 // root server handler
 func mailer(w http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodPost {
+	if req.Method == http.MethodGet {
 		tmpl, _ := template.ParseFiles("public/index.html")
 		tmpl.Execute(w, nil)
 		return
-	}
-
-	// parse html form data
-	req.ParseMultipartForm(10 << 20)
-	getEmails := req.PostFormValue("email-list")
-	getUsername := req.PostFormValue("username")
-	getPassword := req.PostFormValue("password")
-	getPort := req.PostFormValue("port")
-	getHost := req.PostFormValue("host")
-	getSender := req.PostFormValue("sender-name")
-	getSubject := req.PostFormValue("subject")
-	getMessage := req.PostFormValue("message")
-	getMsgType := req.PostFormValue("message-type")
-	var fileContent []byte
-	if getMsgType == "html" {
-		file, handler, _ := req.FormFile("html-file")
-		defer file.Close()
-		fileContent = make([]byte, handler.Size)
-		_, err := file.Read(fileContent)
+	} else if req.Method == http.MethodPost {
+		// parse html form data
+		req.ParseMultipartForm(10 << 20)
+		getEmails := req.PostFormValue("email-list")
+		getUsername := req.PostFormValue("username")
+		getPassword := req.PostFormValue("password")
+		getPort := req.PostFormValue("port")
+		getHost := req.PostFormValue("host")
+		getSender := req.PostFormValue("sender-name")
+		getSubject := req.PostFormValue("subject")
+		getMessage := req.PostFormValue("message")
+		getMsgType := req.PostFormValue("message-type")
+		var fileContent []byte
+		if getMsgType == "html" {
+			file, handler, _ := req.FormFile("html-file")
+			defer file.Close()
+			fileContent = make([]byte, handler.Size)
+			_, err := file.Read(fileContent)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte("Error reading file."))
+				return
+			}
+		}
+		// append all parsed form data to body slice
+		body = append(body, getSender, getSubject, getMessage, getUsername)
+		// store parsed smtp credentials for authentication
+		smtpCreds := []string{getUsername, getPassword, getPort, getHost}
+		smtp, err := ConnectSmtp(smtpCreds)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Error reading file."))
+			w.Write([]byte("Error connecting to SMTP Server."))
+			fmt.Printf("err: %v\n", err)
 			return
 		}
-	}
-	// append all parsed form data to body slice
-	body = append(body, getSender, getSubject, getMessage, getUsername)
-	// store parsed smtp credentials for authentication
-	smtpCreds := []string{getUsername, getPassword, getPort, getHost}
-	smtp, err := ConnectSmtp(smtpCreds)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Error connecting to SMTP Server."))
-		fmt.Printf("err: %v\n", err)
-		return
-	}
-	addresses := strings.Split(getEmails, "\n")
+		addresses := strings.Split(getEmails, "\n")
 
-	var emails Emails
-	for _, address := range addresses {
-		emails = append(emails, strings.TrimSpace(address))
+		var emails Emails
+		for _, address := range addresses {
+			emails = append(emails, strings.TrimSpace(address))
+		}
+		numEmails = len(emails)
+
+		//set number of emails to the waitGroup and execute the goroutines
+		wg.Add(numEmails)
+		for i := 0; i < numEmails; i++ {
+			go SendMail(i, &wg, emails, smtp, body, fileContent)
+		}
+
+		wg.Wait()
+		// send response to client after all goroutines are done.
+		w.Write([]byte("all is done!"))
 	}
-	numEmails = len(emails)
-
-	//set number of emails to the waitGroup and execute the goroutines
-	wg.Add(numEmails)
-	for i := 0; i < numEmails; i++ {
-		go SendMail(i, &wg, emails, smtp, body, fileContent)
-	}
-
-	wg.Wait()
-
-	// send response to client after all goroutines are done.
-	w.Write([]byte("all is done!"))
 }
-
 func main() {
 	http.HandleFunc("/", mailer)
 	http.HandleFunc("/status", ReadStatus)

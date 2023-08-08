@@ -348,6 +348,47 @@ function hideError() {
   errorMessage.style.transform = "translateY(-400%)";
 }
 
+// get all needed elements
+const sentCountElement = document.getElementById("sent-count");
+const failedCountElement = document.getElementById("failed-count");
+const statusCounts = document.querySelector(".status-counts");
+const statusDisplayContainer = document.querySelector(".status-container");
+const statusDisplay = document.getElementById("status-display");
+
+//establish SSE connection to the Go server
+const eventSource = new EventSource("/status");
+
+// process message update from server
+eventSource.onmessage = (event) => {
+  statusCounts.style.display = "block";
+  statusDisplayContainer.style.display = "block";
+  const result = JSON.parse(event.data);
+  const { email, status } = result;
+  const emailStatus = status ? "Sent" : "Failed";
+  const statusColor = status ? "green" : "red";
+  statusDisplay.innerHTML += `${email} -> <span style="color:${statusColor}">${emailStatus}</span><br>`;
+
+  // increment sent and failed on realtime update from server
+  if (status) {
+    sentCountElement.textContent = parseInt(sentCountElement.textContent) + 1;
+  } else {
+    failedCountElement.textContent =
+      parseInt(failedCountElement.textContent) + 1;
+  }
+};
+
+// handle SSE error connection
+eventSource.onerror = () => {
+  console.error("Error in SSE connection.");
+  eventSource.close();
+};
+
+// handle closed SSE connection
+eventSource.onclose = () => {
+  console.log("SSE connection closed.");
+  button.disabled = false;
+};
+
 // make sure none of the fields are empty
 function submitForm() {
   const form = document.getElementById("mail-form");
@@ -363,54 +404,13 @@ function submitForm() {
   button.style.padding = "15px";
   loader.style.display = "block";
 
-  // get all needed elements
-  button.disabled = true;
-  const sentCountElement = document.getElementById("sent-count");
-  const failedCountElement = document.getElementById("failed-count");
-  const statusCounts = document.querySelector(".status-counts");
-  const statusDisplayContainer = document.querySelector(".status-container");
-  const statusDisplay = document.getElementById("status-display");
   sentCountElement.textContent = 0;
   failedCountElement.textContent = 0;
   statusDisplay.innerHTML = "";
 
-  //establish SSE connection to the Go server
-  const eventSource = new EventSource("/status");
-
-  // process message update from server
-  eventSource.onmessage = (event) => {
-    statusCounts.style.display = "block";
-    statusDisplayContainer.style.display = "block";
-    const result = JSON.parse(event.data);
-    const { email, status } = result;
-    const emailStatus = status ? "Sent" : "Failed";
-    const statusColor = status ? "green" : "red";
-    statusDisplay.innerHTML += `${email} -> <span style="color:${statusColor}">${emailStatus}</span><br>`;
-
-    // increment sent and failed on realtime update from server
-    if (status) {
-      sentCountElement.textContent = parseInt(sentCountElement.textContent) + 1;
-    } else {
-      failedCountElement.textContent =
-        parseInt(failedCountElement.textContent) + 1;
-    }
-  };
-
-  // handle SSE error connection
-  eventSource.onerror = () => {
-    console.error("Error in SSE connection.");
-    eventSource.close();
-  };
-
-  // handle closed SSE connection
-  eventSource.onclose = () => {
-    console.log("SSE connection closed.");
-    button.disabled = false;
-  };
-
   // properly format form input values
   const formData = new FormData(form);
-
+  console.log("button is here!")
   fetch("/", {
     method: "POST",
     body: formData,
@@ -430,7 +430,7 @@ function submitForm() {
           button.style.padding = "10px";
           button.disabled = false;
         });
-      }
+      }else console.log(response)
     })
     .catch((error) => {
       console.error("An error occurred:", error);
