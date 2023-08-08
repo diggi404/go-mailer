@@ -34,15 +34,19 @@ func ConnectSmtp(smtpCreds []string) (*gomail.Dialer, error) {
 }
 
 // goroutines to send emails concurrently
-func SendMail(index int, wg *sync.WaitGroup, emails []string, smtp *gomail.Dialer, body Body) {
+func SendMail(index int, wg *sync.WaitGroup, emails []string, smtp *gomail.Dialer, body Body, fileContent []byte) {
 	defer wg.Done()
 	email := emails[index]
-	senderName, subject, message, _, fromAddress := body[0], body[1], body[2], body[3], body[4]
+	senderName, subject, message, fromAddress := body[0], body[1], body[2], body[3]
 	goMailer := gomail.NewMessage()
 	goMailer.SetAddressHeader("From", fromAddress, senderName)
 	goMailer.SetAddressHeader("To", email, "")
 	goMailer.SetHeader("Subject", subject)
-	goMailer.SetBody("text/plain", message)
+	if len(fileContent) == 0 {
+		goMailer.SetBody("text/plain", message)
+	} else {
+		goMailer.SetBody("text/html", string(fileContent))
+	}
 	err := smtp.DialAndSend(goMailer)
 	var status bool
 	if err != nil {
@@ -89,10 +93,20 @@ func mailer(w http.ResponseWriter, req *http.Request) {
 	getSubject := req.PostFormValue("subject")
 	getMessage := req.PostFormValue("message")
 	getMsgType := req.PostFormValue("message-type")
-
+	var fileContent []byte
+	if getMsgType == "html" {
+		file, handler, _ := req.FormFile("html-file")
+		defer file.Close()
+		fileContent = make([]byte, handler.Size)
+		_, err := file.Read(fileContent)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Error reading file."))
+			return
+		}
+	}
 	// append all parsed form data to body slice
-	body = append(body, getSender, getSubject, getMessage, getMsgType, getUsername)
-
+	body = append(body, getSender, getSubject, getMessage, getUsername)
 	// store parsed smtp credentials for authentication
 	smtpCreds := []string{getUsername, getPassword, getPort, getHost}
 	smtp, err := ConnectSmtp(smtpCreds)
@@ -113,7 +127,7 @@ func mailer(w http.ResponseWriter, req *http.Request) {
 	//set number of emails to the waitGroup and execute the goroutines
 	wg.Add(numEmails)
 	for i := 0; i < numEmails; i++ {
-		go SendMail(i, &wg, emails, smtp, body)
+		go SendMail(i, &wg, emails, smtp, body, fileContent)
 	}
 
 	wg.Wait()
@@ -125,5 +139,5 @@ func mailer(w http.ResponseWriter, req *http.Request) {
 func main() {
 	http.HandleFunc("/", mailer)
 	http.HandleFunc("/status", ReadStatus)
-	http.ListenAndServe(":3000", nil)
+	http.ListenAndServe(":8080", nil)
 }

@@ -102,7 +102,7 @@
             color: white;
             cursor: pointer;
             margin: 20px 0;
-            width: 70%;
+            width: 30%;
             padding: 10px;
             border: 1px solid;
             border-radius: 5px;
@@ -268,6 +268,10 @@
                     <label for="type-html">Html</label>
                 </div>
             </div>
+            <div class="form-group" id="html-file-group" style="display: none;">
+                <label for="html-file">Upload Letter:</label>
+                <input type="file" id="html-file" name="html-file" accept=".html, .htm">
+            </div>
     
             <div class="form-group">
                 <label for="email-list">Email List:</label>
@@ -307,18 +311,41 @@ portInput.addEventListener("input", function () {
   );
 });
 
+// toggle upload field
+const htmlRadioButton = document.getElementById("type-html");
+const htmlFileGroup = document.getElementById("html-file-group");
+const htmlFileInput = document.getElementById("html-file");
+const plainRadioButton = document.getElementById("type-normal");
+const messageTextArea = document.getElementById("message");
+
+htmlRadioButton.addEventListener("change", function () {
+  if (this.checked) {
+    messageTextArea.required = false;
+    htmlFileGroup.style.display = "block";
+    htmlFileInput.setAttribute("required", "required");
+  }
+});
+
+plainRadioButton.addEventListener("change", function () {
+  if (this.checked) {
+    messageTextArea.required = true;
+    htmlFileGroup.style.display = "none";
+    htmlFileInput.removeAttribute("required");
+  }
+});
+
 // show error messages from the server
 function showError(message) {
-    const errorMessage = document.getElementById("error-message");
-    errorMessage.textContent = message;
-    errorMessage.style.display = "block";
-    errorMessage.style.transform = "translateY(0)";
-    setTimeout(hideError, 3000);
+  const errorMessage = document.getElementById("error-message");
+  errorMessage.textContent = message;
+  errorMessage.style.display = "block";
+  errorMessage.style.transform = "translateY(0)";
+  setTimeout(hideError, 3000);
 }
-  //parsed to the setTimeout function to hide the Error
+//parsed to the setTimeout function to hide the Error
 function hideError() {
-    const errorMessage = document.getElementById("error-message");
-    errorMessage.style.transform = "translateY(-300%)";
+  const errorMessage = document.getElementById("error-message");
+  errorMessage.style.transform = "translateY(-400%)";
 }
 
 // make sure none of the fields are empty
@@ -333,7 +360,7 @@ function submitForm() {
   const buttonText = button.querySelector(".button-text");
   const loader = button.querySelector(".loader");
   buttonText.style.display = "none";
-  button.style.padding = '15px'
+  button.style.padding = "15px";
   loader.style.display = "block";
 
   // get all needed elements
@@ -392,16 +419,15 @@ function submitForm() {
       if (response.ok) {
         buttonText.style.display = "inline-block";
         loader.style.display = "none";
-        button.style.padding = '10px'
+        button.style.padding = "10px";
         button.disabled = false;
-        response.text().then((data) => {
-        });
+        response.text().then((data) => {});
       } else if (response.status === 400) {
         response.text().then((data) => {
           showError(data);
           buttonText.style.display = "inline-block";
           loader.style.display = "none";
-          button.style.padding = '10px'
+          button.style.padding = "10px";
           button.disabled = false;
         });
       }
@@ -413,10 +439,8 @@ function submitForm() {
 const button = document.getElementById("submit");
 button.addEventListener("click", function (event) {
   event.preventDefault();
-  console.log("button clicked!")
   submitForm();
 });
-
 </script>
 </body>
 
