@@ -5,19 +5,22 @@ body {
     padding: 0;
 }
 #error-message {
-    display: none;
-    width: 20%;
-    position:absolute;
-    left: 35%;
+    display: block;
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     background-color: #f44336;
     color: white;
     text-align: center;
     padding: 10px;
     border-radius: 4px;
-    margin-bottom: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease-in-out;
-    transform: translateY(-100%);
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+}
+#error-message.show {
+    opacity: 1;
 }
 
 .header-container {

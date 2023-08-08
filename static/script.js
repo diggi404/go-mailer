@@ -32,20 +32,17 @@ plainRadioButton.addEventListener("change", function () {
 });
 
 // show error messages from the server
-function showError(message) {
-  const errorMessage = document.getElementById("error-message");
-  errorMessage.textContent = message;
-  errorMessage.style.display = "block";
-  errorMessage.style.transform = "translateY(0)";
-  setTimeout(hideError, 3000);
-}
-//parsed to the setTimeout function to hide the Error
-function hideError() {
-  const errorMessage = document.getElementById("error-message");
-  errorMessage.style.transform = "translateY(-400%)";
+function showError(message, color) {
+  const errorMessageContainer = document.getElementById("error-message");
+  errorMessageContainer.textContent = message;
+  errorMessageContainer.style.backgroundColor = color;
+  errorMessageContainer.classList.add("show");
+  setTimeout(function () {
+    errorMessageContainer.classList.remove("show");
+  }, 2000);
 }
 
-// get all needed elements
+// email process updating
 const sentCountElement = document.getElementById("sent-count");
 const failedCountElement = document.getElementById("failed-count");
 const statusCounts = document.querySelector(".status-counts");
@@ -94,11 +91,13 @@ function submitForm() {
     return;
   }
 
+  // loading animation on submit button.
   const button = document.getElementById("submit");
   const buttonText = button.querySelector(".button-text");
   const loader = button.querySelector(".loader");
   buttonText.style.display = "none";
   button.style.padding = "15px";
+  button.disabled = true;
   loader.style.display = "block";
 
   sentCountElement.textContent = 0;
@@ -118,14 +117,16 @@ function submitForm() {
         loader.style.display = "none";
         button.style.padding = "10px";
         button.disabled = false;
-        response.text().then((data) => {});
-      } else if (response.status === 400) {
         response.text().then((data) => {
-          showError(data);
-          buttonText.style.display = "inline-block";
-          loader.style.display = "none";
-          button.style.padding = "10px";
-          button.disabled = false;
+          showError(data, "#3DD65E");
+        });
+      } else if (response.status === 400) {
+        buttonText.style.display = "inline-block";
+        loader.style.display = "none";
+        button.style.padding = "10px";
+        button.disabled = false;
+        response.text().then((data) => {
+          showError(data, "f44336");
         });
       } else console.log(response);
     })
