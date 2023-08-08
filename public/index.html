@@ -105,13 +105,43 @@
             width: 70%;
             padding: 10px;
             border: 1px solid;
-            border-radius: 4px;
+            border-radius: 5px;
             margin: 0 auto;
             display: block;
         }
 
         #submit:hover {
             background-color: #194682;
+        }
+        .loading-button {
+            position: relative;
+        }
+          
+        .button-text {
+            display: inline-block;
+        }
+          
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+          
+        @keyframes spin {
+            0% {
+              transform: translate(-50%, -50%) rotate(0deg);
+            }
+            100% {
+              transform: translate(-50%, -50%) rotate(360deg);
+            }
         }
 
         .center-header {
@@ -246,7 +276,10 @@
     
     
             <div class="form-group">
-                <button type="submit" id="submit">Send</button>
+                <button type="submit" id="submit" class="loading-button">
+                    <span class="button-text">Send</span>
+                    <div class="loader"></div>
+                  </button>
             </div>
         </form>
         <div class="status-counts">
@@ -296,8 +329,14 @@ function submitForm() {
     return;
   }
 
-  // get all needed elements
   const button = document.getElementById("submit");
+  const buttonText = button.querySelector(".button-text");
+  const loader = button.querySelector(".loader");
+  buttonText.style.display = "none";
+  button.style.padding = '15px'
+  loader.style.display = "block";
+
+  // get all needed elements
   button.disabled = true;
   const sentCountElement = document.getElementById("sent-count");
   const failedCountElement = document.getElementById("failed-count");
@@ -351,13 +390,18 @@ function submitForm() {
   })
     .then((response) => {
       if (response.ok) {
+        buttonText.style.display = "inline-block";
+        loader.style.display = "none";
+        button.style.padding = '10px'
         button.disabled = false;
         response.text().then((data) => {
-          console.log(data);
         });
       } else if (response.status === 400) {
         response.text().then((data) => {
           showError(data);
+          buttonText.style.display = "inline-block";
+          loader.style.display = "none";
+          button.style.padding = '10px'
           button.disabled = false;
         });
       }
@@ -369,6 +413,7 @@ function submitForm() {
 const button = document.getElementById("submit");
 button.addEventListener("click", function (event) {
   event.preventDefault();
+  console.log("button clicked!")
   submitForm();
 });
 

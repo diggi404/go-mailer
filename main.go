@@ -46,6 +46,7 @@ func SendMail(index int, wg *sync.WaitGroup, emails []string, smtp *gomail.Diale
 	err := smtp.DialAndSend(goMailer)
 	var status bool
 	if err != nil {
+		fmt.Printf("err: %v\n", err)
 		status = false
 		result := Results{email: status}
 		resultsChan <- result
